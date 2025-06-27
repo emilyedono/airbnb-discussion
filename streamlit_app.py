@@ -24,9 +24,9 @@ airbnb['host_acceptance_rate'] = airbnb['host_acceptance_rate'].str.strip('%').a
 # Convert t/f columns to binary
 def tfconvert(x):
   if x == 't':
-    return True
+    return "Superhost"
   elif x == 'f':
-    return False
+    return "Not Superhost"
   else:
     return None
 
@@ -88,39 +88,46 @@ else:
 #   groupby=['neighborhood', 'host_type']
 # )
 
-# Scatter plot using Altair
-scatter = alt.Chart(filtered_airbnb, title='Scatter Plot of Review Score and Price per Person').mark_circle().encode(
-    x=alt.X("review_scores_rating:Q").axis(title='Review Score'),
-    y=alt.Y("price_per_person:Q").axis(title='Price per Person ($)'),
-    color="host_type:N",
-    tooltip=["review_scores_rating", "price_per_person", "host_type"]
-).interactive()
+filtered_airbnb = airbnb.dropna(subset=['host_is_superhost', 'host_type', 'review_scores_rating', 'price_per_person', 'host_tenure', 'host_id'])
+# Create a click selection
+superhost_click = alt.selection_point(fields=['host_is_superhost'], empty="all")
+#superhost_click = alt.selection_point(encodings=['color'])
 
-filtered_airbnb_sup = filtered_airbnb.dropna(subset=['host_is_superhost', 'host_type'])
+# Bar chart
+bar3 = alt.Chart(filtered_airbnb, title='Total Listings by Host Type and Superhost').mark_bar().encode(
+    x=alt.X("host_type:N", title='Host Type'),
+    y=alt.Y("count()", title='Number of Listings'),
+    color=alt.Color("host_is_superhost:N", title="Superhost"),
+    opacity=alt.condition(superhost_click, alt.value(1), alt.value(0.3))
+).add_params(superhost_click)
 
-bar3 = alt.Chart(filtered_airbnb_sup, title='Total Listings by Host Type and Superhost').mark_bar().encode(
-  x=alt.X("host_type").axis(title='Host Type'),
-  y=alt.Y("count()", title='Number of Listings'),
-  color=alt.Color("host_is_superhost:N", title = "Superhost")
-)
-filtered_airbnb['host_since'] = pd.to_datetime(filtered_airbnb['host_since'])
-filtered_airbnb['host_join_year'] = filtered_airbnb['host_since'].dt.year
+# Scatter plot
+scatter = alt.Chart(filtered_airbnb, title='Review Score vs Price per Person').mark_circle().encode(
+    x=alt.X("review_scores_rating:Q", title='Review Score'),
+    y=alt.Y("price_per_person:Q", title='Price per Person ($)'),
+    color=alt.Color("host_type:N"),
+    tooltip=["review_scores_rating", "price_per_person", "host_type"],
+    opacity=alt.condition(superhost_click, alt.value(1), alt.value(0.2))
+).transform_filter(superhost_click)
 
-filtered_airbnb_tenure = filtered_airbnb.dropna(subset=['host_tenure', 'host_type'], inplace=True)
-
-area_chart = alt.Chart(filtered_airbnb, title='Total Hosts by Tenure and Host Type').mark_area().encode(
+# Area chart
+area_chart = alt.Chart(filtered_airbnb, title='Hosts by Tenure and Host Type').mark_area().encode(
     x=alt.X('host_tenure:O', title='Host Tenure'),
-    y=alt.Y('host_id', aggregate='distinct', title='# of Hosts', stack='zero'),
-    color=alt.Color('host_type:N', title='Host Type'),
-    tooltip=['host_tenure:N', 'host_type:N', alt.Tooltip('distinct(host_id):Q', title='Distinct Count of Hosts')]
-)
+    y=alt.Y('count()', title='# of Listings'),
+    color=alt.Color('host_type:N'),
+    tooltip=[alt.Tooltip('host_tenure:O'), alt.Tooltip('host_type:N'), alt.Tooltip('distinct(host_id):Q')]
+).transform_filter(superhost_click)
 
-# Streamlit app
+top_row = bar3 | scatter
+full_chart = top_row & area_chart
+full_chart
 st.title("Boston Airbnb Host Behavior")
 # st.altair_chart(bar1, use_container_width=True)
 # st.altair_chart(stackbar, use_container_width=True)
-st.altair_chart(bar3)
-st.altair_chart(area_chart)
-st.altair_chart(scatter)
+# st.altair_chart(bar3)
+# st.altair_chart(area_chart)
+# st.altair_chart(scatter)
+st.altair_chart(full_chart, use_container_width=True)
 
 # testing testing 123
+
