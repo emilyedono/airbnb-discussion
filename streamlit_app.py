@@ -97,7 +97,7 @@ superhost_click = alt.selection_point(fields=['host_is_superhost'], empty="all")
 bar3 = alt.Chart(filtered_airbnb, title='Total Listings by Host Type and Superhost').mark_bar().encode(
     x=alt.X("host_type:N", title='Host Type'),
     y=alt.Y("count()", title='Number of Listings'),
-    color=alt.Color("host_is_superhost:N", title="Superhost"),
+    color=alt.Color("host_is_superhost:N", title="Superhost", scale=alt.Scale(scheme='category10'), legend=alt.Legend(orient='left')),
     opacity=alt.condition(superhost_click, alt.value(1), alt.value(0.3))
 ).add_params(superhost_click)
 
@@ -105,7 +105,7 @@ bar3 = alt.Chart(filtered_airbnb, title='Total Listings by Host Type and Superho
 scatter = alt.Chart(filtered_airbnb, title='Review Score vs Price per Person').mark_circle().encode(
     x=alt.X("review_scores_rating:Q", title='Review Score'),
     y=alt.Y("price_per_person:Q", title='Price per Person ($)'),
-    color=alt.Color("host_type:N"),
+    color=alt.Color("host_type:N", scale=alt.Scale(scheme='tableau10'), legend=alt.Legend()),
     tooltip=["review_scores_rating", "price_per_person", "host_type"],
     opacity=alt.condition(superhost_click, alt.value(1), alt.value(0.2))
 ).transform_filter(superhost_click)
@@ -114,19 +114,19 @@ scatter = alt.Chart(filtered_airbnb, title='Review Score vs Price per Person').m
 area_chart = alt.Chart(filtered_airbnb, title='Count of Listings by Host Tenure and Type').mark_area().encode(
     x=alt.X('host_tenure:O', title='Host Tenure'),
     y=alt.Y('count()', title='# of Listings'),
-    color=alt.Color('host_type:N'),
+    color=alt.Color('host_type:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(orient='right', title='Host Type')),
     tooltip=[alt.Tooltip('host_tenure:O'), alt.Tooltip('host_type:N'), alt.Tooltip('distinct(host_id):Q')]
 ).transform_filter(superhost_click)
 
 top_row = bar3 | scatter
-full_chart = top_row & area_chart
+full_chart = (top_row & area_chart).resolve_scale(color='independent')
 st.title("Boston Airbnb Host Behavior")
 # st.altair_chart(bar1, use_container_width=True)
 # st.altair_chart(stackbar, use_container_width=True)
 # st.altair_chart(bar3)
 # st.altair_chart(area_chart)
 # st.altair_chart(scatter)
-st.altair_chart(full_chart, use_container_width=True)
+st.altair_chart(bar3 | scatter & area_chart, use_container_width=True)
 
 # testing testing 123
 
