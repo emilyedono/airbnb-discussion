@@ -111,7 +111,7 @@ scatter = alt.Chart(filtered_airbnb, title='Review Score vs Price per Person').m
 ).transform_filter(superhost_click)
 
 # Area chart
-area_chart = alt.Chart(filtered_airbnb, title='Hosts by Tenure and Host Type').mark_area().encode(
+area_chart = alt.Chart(filtered_airbnb, title='Count of Listings by Host Tenure and Type').mark_area().encode(
     x=alt.X('host_tenure:O', title='Host Tenure'),
     y=alt.Y('count()', title='# of Listings'),
     color=alt.Color('host_type:N'),
@@ -120,7 +120,6 @@ area_chart = alt.Chart(filtered_airbnb, title='Hosts by Tenure and Host Type').m
 
 top_row = bar3 | scatter
 full_chart = top_row & area_chart
-full_chart
 st.title("Boston Airbnb Host Behavior")
 # st.altair_chart(bar1, use_container_width=True)
 # st.altair_chart(stackbar, use_container_width=True)
