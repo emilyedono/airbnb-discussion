@@ -126,7 +126,7 @@ st.title("Boston Airbnb Host Behavior")
 # st.altair_chart(bar3)
 # st.altair_chart(area_chart)
 # st.altair_chart(scatter)
-st.altair_chart(bar3 | scatter & area_chart, use_container_width=True)
+st.altair_chart((bar3 | scatter & area_chart).resolve_scale(color='independent'), use_container_width=True)
 
 # testing testing 123
 
