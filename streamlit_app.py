@@ -88,7 +88,7 @@ else:
 #   groupby=['neighborhood', 'host_type']
 # )
 
-filtered_airbnb = airbnb.dropna(subset=['host_is_superhost', 'host_type', 'review_scores_rating', 'price_per_person', 'host_tenure', 'host_id'])
+filtered_airbnb = filtered_airbnb.dropna(subset=['host_is_superhost', 'host_type', 'review_scores_rating', 'price_per_person', 'host_tenure', 'host_id'])
 # Create a click selection
 superhost_click = alt.selection_point(fields=['host_is_superhost'], empty="all")
 #superhost_click = alt.selection_point(encodings=['color'])
