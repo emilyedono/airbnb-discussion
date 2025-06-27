@@ -69,24 +69,24 @@ if neighborhood != "All":
 else:
     filtered_airbnb = airbnb
 
-## get median price per person per neighborhood
-bar1 = alt.Chart(filtered_airbnb, title='Median Price per Neighborhood').mark_bar().encode(
-    alt.X("median_price:Q").axis(title='Price per Person ($)'),
-    alt.Y("neighborhood", sort='-x').axis(title='Boston Neighborhood')
-).transform_aggregate(
-  median_price='median(price_per_person)',
-  groupby=['neighborhood']
-)
+# ## get median price per person per neighborhood
+# bar1 = alt.Chart(filtered_airbnb, title='Median Price per Neighborhood').mark_bar().encode(
+#     alt.X("median_price:Q").axis(title='Price per Person ($)'),
+#     alt.Y("neighborhood", sort='-x').axis(title='Boston Neighborhood')
+# ).transform_aggregate(
+#   median_price='median(price_per_person)',
+#   groupby=['neighborhood']
+# )
 
-# get count of listings by neighborhood colored by host type
-stackbar = alt.Chart(filtered_airbnb, title='Count of Listings by Neighborhood and Host Type').mark_bar().encode(
-    alt.X("listings:Q").axis(title='Count of Listings'),
-    alt.Y("neighborhood", sort='-x').axis(title='Boston Neighborhood'),
-    color="host_type:N"
-).transform_aggregate(
-  listings='count()',
-  groupby=['neighborhood', 'host_type']
-)
+# # get count of listings by neighborhood colored by host type
+# stackbar = alt.Chart(filtered_airbnb, title='Count of Listings by Neighborhood and Host Type').mark_bar().encode(
+#     alt.X("listings:Q").axis(title='Count of Listings'),
+#     alt.Y("neighborhood", sort='-x').axis(title='Boston Neighborhood'),
+#     color="host_type:N"
+# ).transform_aggregate(
+#   listings='count()',
+#   groupby=['neighborhood', 'host_type']
+# )
 
 # Scatter plot using Altair
 scatter = alt.Chart(filtered_airbnb, title='Scatter Plot of Review Score and Price per Person').mark_circle().encode(
