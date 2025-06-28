@@ -58,16 +58,23 @@ airbnb.drop(['neighbourhood','calendar_updated'], axis=1, inplace=True)
 # rename neighbourhood_cleansed as it is the real neighborhood column we are interested in
 airbnb.rename(columns={'neighbourhood_cleansed':'neighborhood'}, inplace=True)
 
+st.title("Boston Airbnb Host Behavior")
 
 # Selectbox: Filter by Origin
 neighborhood_options = ["All"] + list(airbnb["neighborhood"].unique())
 neighborhood = st.selectbox("Filter by Neighborhood", options=neighborhood_options)
 
+# Slider: Filter by Price per Person
+price_range = st.slider("Select Price Range ($)",
+                            int(airbnb["price_per_person"].min()), 
+                            int(airbnb["price_per_person"].mean() + 3*airbnb["price_per_person"].std()), 
+                            ((int(airbnb["price_per_person"].min()), int(airbnb["price_per_person"].mean() + 3*airbnb["price_per_person"].std()))))
 # Filter the DataFrame only if a specific neighborhood is selected
 if neighborhood != "All":
-    filtered_airbnb = airbnb[airbnb["neighborhood"] == neighborhood]
+    filtered_airbnb = airbnb[(airbnb["neighborhood"] == neighborhood) & 
+                    (airbnb["price_per_person"].between(*price_range))]
 else:
-    filtered_airbnb = airbnb
+    filtered_airbnb = airbnb[airbnb["price_per_person"].between(*price_range)]
 
 # ## get median price per person per neighborhood
 # bar1 = alt.Chart(filtered_airbnb, title='Median Price per Neighborhood').mark_bar().encode(
@@ -94,39 +101,62 @@ superhost_click = alt.selection_point(fields=['host_is_superhost'], empty="all")
 #superhost_click = alt.selection_point(encodings=['color'])
 
 # Bar chart
-bar3 = alt.Chart(filtered_airbnb, title='Total Listings by Host Type and Superhost').mark_bar().encode(
-    x=alt.X("host_type:N", title='Host Type'),
-    y=alt.Y("count()", title='Number of Listings'),
-    color=alt.Color("host_is_superhost:N", title="Superhost", scale=alt.Scale(scheme='category10'), legend=alt.Legend(orient='left')),
+bar3 = alt.Chart(filtered_airbnb).mark_bar().encode(
+    x=alt.X("count()", title='Number of Listings'),
+    y=alt.Y("host_type:N", title='Host Type'),
+    color=alt.Color("host_is_superhost:N", title="Superhost", scale=alt.Scale(
+        domain=["Superhost", "Not Superhost"],
+        range=["#2ca02c", "#9467bd"]  # from tableau10
+    ), legend=alt.Legend(orient='top')),
     opacity=alt.condition(superhost_click, alt.value(1), alt.value(0.3))
-).add_params(superhost_click)
+).add_params(superhost_click).properties(
+    title=alt.TitleParams(
+        text='Total Listings by Host Type and Superhost',
+        anchor='middle'
+    ))
 
 # Scatter plot
 scatter = alt.Chart(filtered_airbnb, title='Review Score vs Price per Person').mark_circle().encode(
     x=alt.X("review_scores_rating:Q", title='Review Score'),
     y=alt.Y("price_per_person:Q", title='Price per Person ($)'),
-    color=alt.Color("host_type:N", scale=alt.Scale(scheme='tableau10'), legend=alt.Legend()),
+    color=alt.Color("host_type:N", scale=alt.Scale(scheme='tableau10'), legend=None),
     tooltip=["review_scores_rating", "price_per_person", "host_type"],
     opacity=alt.condition(superhost_click, alt.value(1), alt.value(0.2))
 ).transform_filter(superhost_click)
 
 # Area chart
-area_chart = alt.Chart(filtered_airbnb, title='Count of Listings by Host Tenure and Type').mark_area().encode(
+area_chart = alt.Chart(filtered_airbnb).mark_area().encode(
     x=alt.X('host_tenure:O', title='Host Tenure'),
     y=alt.Y('count()', title='# of Listings'),
-    color=alt.Color('host_type:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(orient='right', title='Host Type')),
+    color=alt.Color('host_type:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(orient='bottom', title='Host Type')),
     tooltip=[alt.Tooltip('host_tenure:O'), alt.Tooltip('host_type:N'), alt.Tooltip('distinct(host_id):Q')]
-).transform_filter(superhost_click)
+).transform_filter(superhost_click).properties(
+    title=alt.TitleParams(
+        text='Count of Listings by Host Tenure and Type',
+        anchor='middle'
+    ))
 
-top_row = bar3 | scatter
-full_chart = (top_row & area_chart).resolve_scale(color='independent')
-st.title("Boston Airbnb Host Behavior")
+layout = alt.vconcat(
+    bar3,
+    area_chart,
+    scatter
+).resolve_scale(color='independent')
 # st.altair_chart(bar1, use_container_width=True)
 # st.altair_chart(stackbar, use_container_width=True)
 # st.altair_chart(bar3)
 # st.altair_chart(area_chart)
 # st.altair_chart(scatter)
-st.altair_chart((bar3 | scatter & area_chart).resolve_scale(color='independent'), use_container_width=True)
+st.altair_chart(layout, use_container_width=True)
+# st.altair_chart(bar3, use_container_width=True)
+
+# # Use Streamlit's layout for side-by-side
+# col1, col2 = st.columns(2)
+
+# with col1:
+#     st.altair_chart(area_chart, use_container_width=True)
+
+# with col2:
+#     st.altair_chart(scatter, use_container_width=True)
 
 # testing testing 123
 
