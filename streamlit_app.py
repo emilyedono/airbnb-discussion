@@ -99,6 +99,7 @@ filtered_airbnb = filtered_airbnb.dropna(subset=['host_is_superhost', 'host_type
 # Create a click selection
 superhost_click = alt.selection_point(fields=['host_is_superhost'], empty="all")
 #superhost_click = alt.selection_point(encodings=['color'])
+host_type_click = alt.selection_point(fields=['host_type'], empty='all')
 
 # Bar chart
 bar3 = alt.Chart(filtered_airbnb).mark_bar().encode(
@@ -121,20 +122,21 @@ scatter = alt.Chart(filtered_airbnb, title='Review Score vs Price per Person').m
     y=alt.Y("price_per_person:Q", title='Price per Person ($)'),
     color=alt.Color("host_type:N", scale=alt.Scale(scheme='tableau10'), legend=None),
     tooltip=["review_scores_rating", "price_per_person", "host_type"],
-    opacity=alt.condition(superhost_click, alt.value(1), alt.value(0.2))
-).transform_filter(superhost_click)
+    opacity=alt.condition(host_type_click, alt.value(1), alt.value(0.2))
+).transform_filter(superhost_click).add_params(host_type_click)
 
 # Area chart
 area_chart = alt.Chart(filtered_airbnb).mark_area().encode(
     x=alt.X('host_tenure:O', title='Host Tenure'),
     y=alt.Y('count()', title='# of Listings'),
     color=alt.Color('host_type:N', scale=alt.Scale(scheme='tableau10'), legend=alt.Legend(orient='bottom', title='Host Type')),
+    opacity=alt.condition(host_type_click, alt.value(1), alt.value(0.1)),
     tooltip=[alt.Tooltip('host_tenure:O'), alt.Tooltip('host_type:N'), alt.Tooltip('distinct(host_id):Q')]
 ).transform_filter(superhost_click).properties(
     title=alt.TitleParams(
         text='Count of Listings by Host Tenure and Type',
         anchor='middle'
-    ))
+    )).add_params(host_type_click)
 
 layout = alt.vconcat(
     bar3,
